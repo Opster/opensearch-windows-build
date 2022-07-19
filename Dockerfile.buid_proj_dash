@@ -1,0 +1,41 @@
+FROM debian:buster-slim
+ARG VERSION
+# Create user group
+RUN groupadd -g 1000 opensearch && \
+    useradd -u 1000 -g 1000 -d /usr/share/opensearch opensearch && \
+    mkdir -p /usr/share/opensearch && \
+    chown -R 1000:1000 /usr/share/opensearch
+
+# Setup Shared Memory
+RUN chmod -R 777 /dev/shm
+
+RUN apt update && apt install -y ca-certificates vim curl gnupg lsb-release python3-pip zip nodejs\
+	&&  curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg \
+	&& echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian \
+  $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null \
+		&& apt-get update && apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin \
+		&& pip3 install pipenv && pipenv --python /usr/bin/python3 
+#RUN  touch ~/.bashrc && mkdir /usr/bin/nvm && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | NVM_DIR="/usr/bin/nvm" bash 
+#	&& echo '\
+#	#!/bin/bash \
+#	export NVM_DIR="/usr/local/nvm"\n \
+#	[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm \n \
+#	[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion \n \
+#	nvm "$@"' > /usr/bin/nvm \
+#	&& chmod +x /usr/bin/nvm \
+#	&& chown opensearch:root /usr/bin/nvm
+
+USER 1000
+RUN  touch ~/.bashrc && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash \
+#	&& echo '\
+#		export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"\
+#		[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm' >> ~/.bashrc \
+#  && echo 'export PATH="/bin:usr/bin:/usr/local/bin:/usr/share/opensearch/.nvm"' >> ~/.bashrc \
+	&& . ~/.bashrc 
+WORKDIR /home/opensearch/
+RUN git clone --branch $VERSION https://github.com/opensearch-project/OpenSearch-Dashboards.git 
+WORKDIR /home/opensearch/OpenSearch-Dashboards
+RUN echo 'export node_ver="$(cat /home/opensearch/OpenSearch-Dashboards/package.json| grep -A2 engine | grep node | cut -d\" -f4)"' >> ~/.bashrc \
+   &&  echo 'export yarn_ver="$(cat /home/opensearch/OpenSearch-Dashboards/package.json| grep -A2 engine | grep yarn | cut -d\" -f4)"' >> ~/.bashrc \
+   #&& cd plugins ; git clone --branch $VERSION.0 https://github.com/opensearch-project/security-dashboards-plugin.git 

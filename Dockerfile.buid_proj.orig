@@ -1,0 +1,18 @@
+FROM maven:3.8.5-jdk-11
+ARG VERSION
+RUN wget https://github.com/opensearch-project/opensearch-build/archive/refs/tags/$VERSION.tar.gz \
+	&& tar -xzvf $VERSION.tar.gz \
+	&& apt update && apt install -y ca-certificates curl gnupg lsb-release python3-pip zip nodejs\
+	&&  curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg \
+	&& echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian \
+  $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null \
+		&& apt-get update && apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin \
+		&& pip3 install pipenv && pipenv --python /usr/bin/python3 \
+	&& curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash \
+	&& . ~/.bashrc \
+	&& nvm install v14.18.2 \
+	&& export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")" \
+	&& [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" \
+	&& npm install -g yarn
+WORKDIR /opensearch-build-$VERSION

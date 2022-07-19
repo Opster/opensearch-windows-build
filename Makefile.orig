@@ -1,0 +1,29 @@
+
+build:
+	docker run -d -it -w /opensearch-build-1.3.2 -v /var/run/docker.sock:/var/run/docker.sock --name build-win opensearch-build:1.3.2 bash
+	docker exec -it  build-win bash -c 'pipenv --python /usr/bin/python3 ; ./build.sh manifests/1.3.2/opensearch-1.3.2.yml --snapshot --platform windows --distribution zip'
+	#docker cp build-win:/OpenSearch-1.3.2/distribution/archives/windows-zip/build/distributions/opensearch-min-1.3.2-SNAPSHOT-windows-x64.zip ./opensearch-min-1.3.2-SNAPSHOT-windows-x64.zip
+	docker cp build-win:/opensearch-build-1.3.2/zip/builds/opensearch/plugins ./
+	docker cp build-win:/opensearch-build-1.3.2/zip/builds/opensearch/dist ./
+	zip -r opensearch-win-source.zip plugins dist
+	aws s3 cp opensearch-win-source.zip s3://opensearch-win/
+democerts:
+	docker exec -it  build-win bash -c 'mkdir /opensearch/ ; unzip /opensearch-build-1.3.2/zip/builds/opensearch/dist/opensearch-min-*.zip -d /opensearch ; mv /opensearch/opensearch-*/* /opensearch; rm -fr /opensearch/opensearch-* ;  mkdir /opensearch/plugins/opensearch-security ; unzip  /opensearch-build-1.3.2/zip/builds/opensearch/plugins/opensearch-security-*.zip -d /opensearch/plugins/opensearch-security ; cd /opensearch/plugins/opensearch-security/tools/ ; ./install_demo_configuration.sh -y ; zip -r /opensearch-with-democerts.zip /opensearch'
+	docker cp build-win:/opensearch-with-democerts.zip ./
+	aws s3 cp opensearch-with-democerts.zip s3://opensearch-win/
+cleancerts:
+	docker exec -it build-win rm -fr /opensearch/
+dashboard:
+	docker run -it -d --name dashboards-build build-opensearch-dashboard:1.3.2 bash
+	docker exec -it dashboards-build bash -c 'source /usr/share/opensearch/.bashrc ; nvm install $$node_ver ; npm i -g yarn@$$yarn_ver ; yarn osd bootstrap ; cd plugins/security-dashboards-plugin ; yarn build ; cd ../../ ; yarn build --skip-os-packages'
+	docker cp dashboards-build:/home/opensearch/OpenSearch-Dashboards/target/opensearch-dashboards-1.3.2-SNAPSHOT-windows-x64.zip ./opensearch-dashboards-1.3.2-SNAPSHOT-windows-x64.zip
+	aws s3 cp opensearch-dashboards-1.3.2-SNAPSHOT-windows-x64.zip s3://opensearch-win/
+dashboard-plugins:
+	docker run -it -d --name dashboards-build build-opensearch-dashboard:1.3.2 bash
+	docker exec -it dashboards-build bash -c 'source /usr/share/opensearch/.bashrc ; nvm install $$node_ver ; npm i -g yarn@$$yarn_ver ; yarn osd bootstrap ; mkdir /home/opensearch/dash-plugins/ ;cd plugins/ ; for i in anomaly-detection security alerting index-management ; do echo "#### Starting compile dashboard plugin $$i ######";git clone --branch 1.3.2.0 https://github.com/opensearch-project/$$i-dashboards-plugin.git ; cd /home/opensearch/OpenSearch-Dashboards/plugins/$${i}-dashboards-plugin ; if [ $$i != "security" ]; then yarn osd bootstrap ; fi ; yarn build ; if [[ "$$i" == "alerting" ]]; then mv build/alertingDashboards-1.3.2.0.zip /home/opensearch/dash-plugins/ ; else mv build/$$i-dashboards-1.3.2.0.zip /home/opensearch/dash-plugins/; fi ; cd /home/opensearch/OpenSearch-Dashboards/plugins ; rm -fr /home/opensearch/OpenSearch-Dashboards/plugins/$${i}-dashboards-plugin ; done ; zip -r /home/opensearch/dashboard-plugins.zip /home/opensearch/dash-plugins'
+	docker cp dashboards-build:/home/opensearch/dashboard-plugins.zip ./dashboard-plugins.zip
+	aws s3 cp dashboard-plugins.zip s3://opensearch-win/
+clean:
+	docker rm -f build-win
+cleandash:
+	docker rm -f dashboards-build
