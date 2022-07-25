@@ -1,7 +1,7 @@
 VERSION?="1.3.2"
 
-ifndef ARTIFACTS_LOCATION
-$(error ARTIFACTS_LOCATION (Used as a location for saving the build zip files) was not set. exiting")
+ifndef S3_ARTIFACTS_BUCKET
+$(error S3_ARTIFACTS_BUCKET (Used as a location for saving the build zip files) was not set. exiting")
 exit 1
 endif
 
