@@ -1,7 +1,12 @@
 VERSION?="1.3.2"
-ARTIFACTS_LOCATION?="<S3_LOCATION_TO_SAVE_BUILD_FILES>"
+
+ifndef ARTIFACTS_LOCATION
+$(error ARTIFACTS_LOCATION (Used as a location for saving the build zip files) was not set. exiting")
+exit 1
+endif
+
 dockers:
-	echo "$(VERSION)"
+	echo "Version: $(VERSION), Location: $(ARTIFACTS_LOCATION)"
 	docker build --build-arg VERSION=$(VERSION) -t opensearch-build:$(VERSION) -f Dockerfile.buid_proj .
 	docker build --build-arg VERSION=$(VERSION) -t build-opensearch-dashboard:$(VERSION) -f Dockerfile.buid_proj_dash .
 build:
