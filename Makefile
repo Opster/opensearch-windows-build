@@ -34,7 +34,7 @@ dashboard:
 	docker run -it -d --name dashboards-build build-opensearch-dashboard:$(VERSION) bash
 	docker exec -it dashboards-build bash -c 'source /usr/share/opensearch/.bashrc ; nvm install $$node_ver ; npm i -g yarn@$$yarn_ver ; yarn osd bootstrap ; yarn build --skip-os-packages'
 	docker cp dashboards-build:/home/opensearch/OpenSearch-Dashboards/target/opensearch-dashboards-$(VERSION)-SNAPSHOT-windows-x64.zip ./opensearch-dashboards-$(VERSION)-SNAPSHOT-windows-x64.zip
-	aws s3 cp opensearch-dashboards-$(VERSION)-SNAPSHOT-windows-x64.zip $(ARTIFACTS_LOCATION)
+	aws s3 cp opensearch-dashboards-$(VERSION)-SNAPSHOT-windows-x64.zip $(S3_ARTIFACTS_BUCKET)
 dashboard-plugins:
 	echo "Running target dashboard-plugins, version: $(VERSION), Location: $(S3_ARTIFACTS_BUCKET)"
 	docker run -it -d --name dashboard-plugins-build build-opensearch-dashboard:$(VERSION) bash
