@@ -6,9 +6,9 @@ ARTIFACTS_LOCATION?="<S3_LOCATION_TO_SAVE_BUILD_FILES>"
 ```
 3. Run the makefile in order to build the artifacts:</br> 
 ```
-Make -e VERSION=”<OPENSEARCH_VERSION>” -e S3_ARTIFACTS_BUCKET=”<BUCKET_NAME>”
+Make all -e VERSION=”<OPENSEARCH_VERSION>” -e S3_ARTIFACTS_BUCKET=”<BUCKET_NAME>”
 ```
 For example, 
 ```
-Make -e VERSION=”2.0.0” -e S3_ARTIFACTS_BUCKET=”s3://opensearch-windows/”
+Make all -e VERSION=”2.0.0” -e S3_ARTIFACTS_BUCKET=”s3://opensearch-windows/”
 ```
