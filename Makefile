@@ -28,12 +28,12 @@ dashboard:
 	docker run -it -d --name dashboards-build build-opensearch-dashboard:$(VERSION) bash
 	docker exec -it dashboards-build bash -c 'source /usr/share/opensearch/.bashrc ; nvm install $$node_ver ; npm i -g yarn@$$yarn_ver ; yarn osd bootstrap ; yarn build --skip-os-packages'
 	docker cp dashboards-build:/home/opensearch/OpenSearch-Dashboards/target/opensearch-dashboards-$(VERSION)-SNAPSHOT-windows-x64.zip ./opensearch-dashboards-$(VERSION)-SNAPSHOT-windows-x64.zip
-	aws s3 cp opensearch-dashboards-$(VERSION)-SNAPSHOT-windows-x64.zip $(ARTIFACTS_LOCATION)
+	aws s3 cp opensearch-dashboards-$(VERSION)-SNAPSHOT-windows-x64.zip $(S3_ARTIFACTS_BUCKET)
 dashboard-plugins:
 	docker run -it -d --name dashboard-plugins-build build-opensearch-dashboard:$(VERSION) bash
 	docker exec -it dashboard-plugins-build bash -c 'source /usr/share/opensearch/.bashrc ; nvm install $$node_ver ; npm i -g yarn@$$yarn_ver ; yarn osd bootstrap ; mkdir /home/opensearch/dash-plugins/ ;cd plugins/ ; for i in anomaly-detection security alerting index-management ; do echo "#### Starting compile dashboard plugin $$i ######";git clone --branch $(VERSION).0 https://github.com/opensearch-project/$$i-dashboards-plugin.git ; cd /home/opensearch/OpenSearch-Dashboards/plugins/$${i}-dashboards-plugin ; if [ $$i != "security" ]; then yarn osd bootstrap ; fi ; yarn build ; if [[ "$$i" == "alerting" ]]; then mv build/alertingDashboards-$(VERSION).0.zip /home/opensearch/dash-plugins/ ; else mv build/$$i-dashboards-$(VERSION).0.zip /home/opensearch/dash-plugins/; fi ; cd /home/opensearch/OpenSearch-Dashboards/plugins ; rm -fr /home/opensearch/OpenSearch-Dashboards/plugins/$${i}-dashboards-plugin ; done ; zip -r /home/opensearch/dashboard-plugins.zip /home/opensearch/dash-plugins'
 	docker cp dashboard-plugins-build:/home/opensearch/dashboard-plugins.zip ./dashboard-plugins-$(VERSION).zip
-	aws s3 cp dashboard-plugins-$(VERSION).zip $(ARTIFACTS_LOCATION)
+	aws s3 cp dashboard-plugins-$(VERSION).zip $(S3_ARTIFACTS_BUCKET)
 clean:
 	docker rm -f build-win
 cleandash:
