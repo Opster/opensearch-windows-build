@@ -2,7 +2,7 @@
 This project provides the scripts and automations needed in order to build OpenSearch running on Windows.</br>Currently supporting OpenSearch v1.32 until 2.0.</br></br>
 To compile a new version, follow these steps:</br>1. Clone or download the build files from: https://github.com/Opster/opensearch-windows-build.</br>2. Edit the make file and set the location to save the build zip file to:
 ```
-ARTIFACTS_LOCATION?="<S3_LOCATION_TO_SAVE_BUILD_FILES>"
+S3_ARTIFACTS_BUCKET?="<S3_LOCATION_TO_SAVE_BUILD_FILES>"
 ```
 3. Run the makefile in order to build the artifacts:</br> 
 ```
